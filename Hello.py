@@ -250,7 +250,7 @@ st.text_area('진료 기록', value="[현병력]\n\n[ROS]\n\n[신체검진]\n\n[
 if not openai_api_key.startswith('sk-'):
     st.warning('Please enter your OpenAI API key!', icon='⚠')
 if openai_api_key.startswith('sk-'):
-    client = OpenAI(openai_api_key)
+    client = OpenAI(api_key=openai_api_key)
     audio = audiorecorder(start_prompt="진료 녹음하기 🔴", stop_prompt="진료 녹음 끝내기 🟥", pause_prompt="", key=None)
 
 if openai_api_key.startswith('sk-') and len(audio)>0.1:
