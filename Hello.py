@@ -72,7 +72,7 @@ def refresh():
     st.session_state.transcript =''
     st.session_state.temp_medical_record ="[현병력]\n\n[ROS]\n\n[신체검진]\n\n[impression]"
 
-def medical_record(transcript):
+def medical_record(transcript,openai_api_key):
     """문진 내용을 기반으로 질문을 함"""
     
     prompt_template = """Given the transcript, write a semi-filled medical report of the patient. Only fill in the form based on the transcript. 
@@ -114,7 +114,7 @@ CBC 시행
                 """
 
     prompt = PromptTemplate.from_template(prompt_template)
-    llm = ChatOpenAI(model_name="gpt-4-turbo", temperature = 0)
+    llm = ChatOpenAI(model_name="gpt-4-turbo", temperature = 0,api_key=openai_api_key)
     output_parser = StrOutputParser()
 
     chain = prompt | llm | output_parser    
@@ -122,7 +122,7 @@ CBC 시행
     output = chain.invoke({"transcript" : transcript})
     return output
 
-def medical_record_voicecomplete():
+def medical_record_voicecomplete(openai_api_key):
     """문진 내용을 기반으로 질문을 함"""
     
     
@@ -143,7 +143,7 @@ Only complete or edit the medical record based on the information given. For the
     
     prompt = PromptTemplate.from_template(prompt_template)
     
-    llm = ChatOpenAI(model_name="gpt-4-turbo", temperature = 0)
+    llm = ChatOpenAI(model_name="gpt-4-turbo", temperature = 0,api_key=openai_api_key)
     output_parser = StrOutputParser()
 
     chain = prompt | llm | output_parser    
@@ -153,9 +153,9 @@ Only complete or edit the medical record based on the information given. For the
 def update_text():
     if st.session_state.format_type == '없음' and st.session_state.temp_medical_record == "":
         with st.spinner('음성 녹음을 바탕으로 진료 기록을 완성하고 있습니다...'):
-            st.session_state.LLM_medrecord = medical_record(transcript=st.session_state.transcript)
+            st.session_state.LLM_medrecord = medical_record(transcript=st.session_state.transcript,openai_api_key)
     else :    
-        chain = medical_record_voicecomplete()
+        chain = medical_record_voicecomplete(openai_api_key)
         with st.spinner('음성 녹음을 바탕으로 진료 기록을 완성하고 있습니다...'):
             st.session_state.LLM_medrecord = chain.invoke({"transcript" : st.session_state.transcript, "incomplete_medrec" : st.session_state.temp_medical_record})
     st.session_state.temp_medical_record = st.session_state.LLM_medrecord 
@@ -163,42 +163,18 @@ def update_text():
 def update_text_advise():
     if st.session_state.format_type == '없음' and st.session_state.temp_medical_record == "":
         with st.spinner('음성 녹음을 바탕으로 진료 기록을 완성하고 있습니다...'):
-            st.session_state.LLM_medrecord = medical_record(transcript=st.session_state.transcript)
+            st.session_state.LLM_medrecord = medical_record(transcript=st.session_state.transcript,openai_api_key)
     else :    
-        chain = medical_record_voicecomplete()
+        chain = medical_record_voicecomplete(openai_api_key)
         with st.spinner('음성 녹음을 바탕으로 진료 기록을 완성하고 있습니다...'):
             st.session_state.LLM_medrecord = chain.invoke({"transcript" : st.session_state.transcript, "incomplete_medrec" : st.session_state.temp_medical_record})
     st.session_state.temp_medical_record = st.session_state.LLM_medrecord 
     st.success("진료 기록을 성공적으로 완성하였습니다.")
     with st.spinner('진료 내용을 검토하고 있습니다...'):
-        output = medical_advisor(st.session_state.temp_medical_record,st.session_state.transcript)
+        output = medical_advisor(st.session_state.temp_medical_record,st.session_state.transcript,openai_api_key)
     st.session_state.temp_medical_record += '\n\n'+ output
     st.success("진료 내용 검토 성공적으로 완료 되었습니다.")
  
-def recorddemo():
-    st.session_state.transcript = """안녕하세요. 네 안녕하세요 환자분, 어깨가 아프셔서 방문하셨군요. 운동범위를 확인해봐야될 것 같아요. 괜찮으시겠어요? 네, 그럼요. 왼팔을 최대한 한번 들어보시겠어요? 네 왼팔은 150도 정도 되시네요. 제가 좀 더 올려볼게요. 아아 아파요. 왼 어깨도 좋진 않으시네요. 평소에 안 불편하셨어요? 병원 올 정도는 아니어서요. 자 이번엔 오른팔 올려볼게요. 아아 여기가 최대예요. 120정도 밖에 안되시네요. 고생하셨겠어요. 네 아무것도 못하고 있죠 뭐. 제가 조금 더 올려볼게요. 아아아아아아 아파요. 네 다 되셨어요. 오른쪽 어깨는 회전근개 파열이 의심되시는 상황이시고 왼쪽 어깨는 오십견이 오신거 같네요. 선생님 어떻게 빨리 낫거나 할 수 있는 방법이 없나요? 파열 됐으면 수술 같은 것을 받아야하나요? 수술은 파열이 어느정도 되었는지 살펴보고 말씀드릴 수 있어요. 검사를 진행해봐야될 것 같습니다. 예약을 잡아드리겠습니다. 무슨 검사인가요? MRI 검사라고 통속에 들어가서 사진을 찍는겁니다. 왼쪽도 찍는김에 같이 찍을게요. 그리고 그전에 통증 조절을 위해 진통제 처방 드리겠습니다. 아이고 감사합니다. 무통주사 이런거는 없을까요? 너무 힘듭니다. 놔드릴 수는 있는 비용이 좀 발생하세요. 실비 보험이 들어있어서 괜찮습니다. 놔주세요. 네 그럼 무통주사도 같이 놔드릴게요. 고혈압이나 당뇨병 같은 기저질환은 없으세요? 네 다른건 다 괜찮고 건강합니다. 네 알겠습니다. 밖에서 기다리시면 처방전이랑 검사 예약 잡아드릴게요. 혹시 보험사에 제출할 세부진료내역서도. 네 해드릴게요. 기다리세요"""
-
-def completedemo():
-    st.session_state.temp_medical_record = """[현병력]
-환자는 양쪽 어깨 통증을 호소하며 내원하였습니다. 왼쪽 어깨는 오십견이 의심되며, 오른쪽 어깨는 회전근개 파열이 의심됩니다.
-
-[ROS]
-어깨 통증 외에 다른 증상은 보고되지 않았습니다.
-
-[신체검진]
-<shoulder ROM>
-Lt. abduction/adduction = 150/30 (왼쪽 어깨의 abduction이 150도로 확인되었습니다. 이는 환자가 왼쪽 팔을 최대로 들었을 때의 각도입니다.)
-Rt. abduction/adduction = 120/30 (오른쪽 어깨의 abduction이 120도로 확인되었습니다. 환자가 오른쪽 팔을 최대로 들었을 때의 각도로, 통증으로 인해 제한된 범위를 보였습니다.)
-Lt. extension/flexion = 50/150
-Rt. extension/flexion = 50/150
-
-[impression]
-왼쪽 어깨: 오십견 의심
-오른쪽 어깨: 회전근개 파열 의심
-
-[추가 정보]
-환자는 고혈압이나 당뇨병과 같은 기저질환은 없으며, 일반적으로 건강한 상태입니다. MRI 검사 예약 및 진통제 처방이 진행될 예정입니다. 또한, 환자의 요청에 따라 통증 조절을 위한 무통주사도 처방될 예정입니다. 환자는 실비 보험에 가입되어 있어 비용에 대한 부담이 적습니다."""
-
 def format_retriever(format_type):
     
     format_lib ={}
@@ -226,11 +202,11 @@ def call_format():
     st.session_state.temp_medical_record = format_retriever(st.session_state.format_type)
 
 def advise(): 
-    output = medical_advisor(st.session_state.temp_medical_record,st.session_state.transcript)
+    output = medical_advisor(st.session_state.temp_medical_record,st.session_state.transcript,openai_api_key)
     st.session_state.temp_medical_record += '\n\n'+ output
     st.success("진료 내용 검토 성공적으로 완료 되었습니다.")
 
-def medical_advisor(medical_record, transcript):
+def medical_advisor(medical_record, transcript,openai_api_key):
     prompt_template = """Given a transcript of a patient consultation and a complete medical record, give medical advice in Korean.
 For example, 
 1. Check drug contraindication
@@ -247,7 +223,7 @@ For example,
 
     prompt = PromptTemplate.from_template(prompt_template)
     
-    llm = ChatOpenAI(model_name="gpt-4-turbo", temperature = 0)
+    llm = ChatOpenAI(model_name="gpt-4-turbo", temperature = 0,api_key=openai_api_key)
     output_parser = StrOutputParser()
 
     chain = prompt | llm | output_parser
@@ -274,7 +250,7 @@ st.text_area('진료 기록', value="[현병력]\n\n[ROS]\n\n[신체검진]\n\n[
 if not openai_api_key.startswith('sk-'):
     st.warning('Please enter your OpenAI API key!', icon='⚠')
 if openai_api_key.startswith('sk-'):
-    client = OpenAI()
+    client = OpenAI(openai_api_key)
     audio = audiorecorder(start_prompt="진료 녹음하기 🔴", stop_prompt="진료 녹음 끝내기 🟥", pause_prompt="", key=None)
 
 if openai_api_key.startswith('sk-') and len(audio)>0.1:
