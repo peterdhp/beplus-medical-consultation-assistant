@@ -71,7 +71,8 @@ def refresh():
     st.session_state.format_type = '없음'
     st.session_state.transcript =''
     st.session_state.temp_medical_record ="[현병력]\n\n[ROS]\n\n[신체검진]\n\n[impression]"
-
+    audio = None
+    
 def medical_record(transcript,openai_api_key):
     """문진 내용을 기반으로 질문을 함"""
     
