@@ -72,7 +72,7 @@ def refresh():
     st.session_state.transcript =''
     st.session_state.temp_medical_record ="[현병력]\n\n[ROS]\n\n[신체검진]\n\n[impression]"
     audio = None
-    
+
 def medical_record(transcript,openai_api_key):
     """문진 내용을 기반으로 질문을 함"""
     
@@ -208,12 +208,10 @@ def advise():
     st.success("진료 내용 검토 성공적으로 완료 되었습니다.")
 
 def medical_advisor(medical_record, transcript,openai_api_key):
-    prompt_template = """Given a transcript of a patient consultation and a complete medical record, give medical advice in Korean.
-For example, 
-1. Check drug contraindication
-2. Check test contraindication
-2. Write list of things that were explained to the patient
-3. Check if all important information was explained to the patient
+    rompt_template = """Let's say you are a medical school professor.
+Given a transcript of a patient consultation and a complete medical record written, give medical feedback in Korean.
+ONLY give feedback that could be critical to the patient, you don't have to say anything if nothing is critical.
+Be as brief as possible.
 
 [transcript]
 {transcript}
