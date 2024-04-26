@@ -153,7 +153,7 @@ Only complete or edit the medical record based on the information given. For the
 def update_text():
     if st.session_state.format_type == '없음' and st.session_state.temp_medical_record == "":
         with st.spinner('음성 녹음을 바탕으로 진료 기록을 완성하고 있습니다...'):
-            st.session_state.LLM_medrecord = medical_record(transcript=st.session_state.transcript,openai_api_key)
+            st.session_state.LLM_medrecord = medical_record(transcript=st.session_state.transcript,openai_api_key=openai_api_key)
     else :    
         chain = medical_record_voicecomplete(openai_api_key)
         with st.spinner('음성 녹음을 바탕으로 진료 기록을 완성하고 있습니다...'):
@@ -163,7 +163,7 @@ def update_text():
 def update_text_advise():
     if st.session_state.format_type == '없음' and st.session_state.temp_medical_record == "":
         with st.spinner('음성 녹음을 바탕으로 진료 기록을 완성하고 있습니다...'):
-            st.session_state.LLM_medrecord = medical_record(transcript=st.session_state.transcript,openai_api_key)
+            st.session_state.LLM_medrecord = medical_record(transcript=st.session_state.transcript,openai_api_key=openai_api_key)
     else :    
         chain = medical_record_voicecomplete(openai_api_key)
         with st.spinner('음성 녹음을 바탕으로 진료 기록을 완성하고 있습니다...'):
@@ -171,7 +171,7 @@ def update_text_advise():
     st.session_state.temp_medical_record = st.session_state.LLM_medrecord 
     st.success("진료 기록을 성공적으로 완성하였습니다.")
     with st.spinner('진료 내용을 검토하고 있습니다...'):
-        output = medical_advisor(st.session_state.temp_medical_record,st.session_state.transcript,openai_api_key)
+        output = medical_advisor(st.session_state.temp_medical_record,st.session_state.transcript,openai_api_key=openai_api_key)
     st.session_state.temp_medical_record += '\n\n'+ output
     st.success("진료 내용 검토 성공적으로 완료 되었습니다.")
  
@@ -202,7 +202,7 @@ def call_format():
     st.session_state.temp_medical_record = format_retriever(st.session_state.format_type)
 
 def advise(): 
-    output = medical_advisor(st.session_state.temp_medical_record,st.session_state.transcript,openai_api_key)
+    output = medical_advisor(st.session_state.temp_medical_record,st.session_state.transcript,openai_api_key=openai_api_key)
     st.session_state.temp_medical_record += '\n\n'+ output
     st.success("진료 내용 검토 성공적으로 완료 되었습니다.")
 
