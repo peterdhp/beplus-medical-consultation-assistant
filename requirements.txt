@@ -4,7 +4,8 @@ pandas
 pydeck
 streamlit
 streamlit-audiorecorder
-langchain_core
-langchain_openai
+langchain-core
+langchain-openai
 datetime
 openai
+pydub
