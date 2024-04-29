@@ -208,7 +208,7 @@ def advise():
     st.success("진료 내용 검토 성공적으로 완료 되었습니다.")
 
 def medical_advisor(medical_record, transcript,openai_api_key):
-    rompt_template = """Let's say you are a medical school professor.
+    prompt_template = """Let's say you are a medical school professor.
 Given a transcript of a patient consultation and a complete medical record written, give medical feedback to the doctor in Korean.
 ONLY give feedback that could be critical to the patient, you don't have to say anything if nothing is critical.
 Be as brief as possible.
