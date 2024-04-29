@@ -129,7 +129,9 @@ def medical_record_voicecomplete(openai_api_key):
     
     
     prompt_template = """Given a transcript of a patient consultation and a incomplete medical record, complete and edit the medical record. 
-Only complete or edit the medical record based on the information given. For the physical examination KEEP THE FORMAT and only change what is necessary, also explain in Korean when changed.
+Complete or edit the medical record based ONLY on the information given. For the physical examination KEEP THE FORMAT and only change what is necessary. 
+After the medical record, give the list of things that the doctor explained to the patient during the consulaltation.
+Use Korean.
 
 [transcript]
 {transcript}
@@ -211,7 +213,9 @@ def medical_advisor(medical_record, transcript,openai_api_key):
     prompt_template = """Let's say you are a medical school professor.
 Given a transcript of a patient consultation and a complete medical record written, give medical feedback to the doctor in Korean.
 ONLY give feedback that could be critical to the patient, you don't have to say anything if nothing is critical.
-Be as brief as possible.
+Be as brief and clear as possible, no longer than 50 Korean characters.
+
+
 
 [transcript]
 {transcript}
