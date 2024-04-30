@@ -21,6 +21,7 @@ if 'transcript' not in st.session_state:
 if "total_cost" not in st.session_state:
     st.session_state.totalcost = 0
 
+player_field=None
 
 #st.session_state.temp_med_rec="[증상]\n[기타 특이사항]\n[진단]\n[치료, 처방 및 계획]"
 with st.sidebar:
@@ -50,7 +51,7 @@ def refresh():
     st.session_state.temp_medical_record ="[현병력]\n\n[ROS]"
     st.session_state.recordings = None
     st.session_state.transcript_status = False
-    if player_field:
+    if player_field is not None:
         player_field.empty()
 
 def medical_record(transcript,openai_api_key):
@@ -243,7 +244,7 @@ if openai_api_key.startswith('sk-'):
         st.warning('음성 녹음은 30분을 초과할 수 없습니다. 첫 30분에 대한 진료내용만 사용합니다.', icon='⚠')
         st.session_state.audio = st.session_state.audio[:thirty_minutes]
 if openai_api_key.startswith('sk-') and st.session_state.recordings and len(st.session_state.audio)>100:
-    st.write(len(st.session_state.audio))
+    #st.write(len(st.session_state.audio))
     player_field = st.audio(st.session_state.audio.export().read())  
     if not st.session_state.transcript_status :
         with st.spinner('음성 녹음을 받아적고 있습니다...'):
@@ -251,7 +252,7 @@ if openai_api_key.startswith('sk-') and st.session_state.recordings and len(st.s
         st.session_state.transcript += '\n'+ asr_result.text 
         st.session_state.transcript_status = True
         
-        st.text_area("진료 음성기록", value =st.session_state.transcript, key='transcript')
+        #st.text_area("진료 음성기록", value =st.session_state.transcript, key='transcript')
         if st.session_state.format_type == '없음' and st.session_state.temp_medical_record == "":
             with st.spinner('음성 녹음을 바탕으로 진료 기록을 완성하고 있습니다...'):
                 st.session_state.LLM_medrecord = medical_record(transcript=st.session_state.transcript,openai_api_key=openai_api_key)
@@ -263,7 +264,7 @@ if openai_api_key.startswith('sk-') and st.session_state.recordings and len(st.s
         medical_record_area.text_area('진료 기록', value=st.session_state.LLM_medrecord , height=600)
         
 #st.write(st.session_state)
-st.button('✍🏻 진료기록 자동 완성 ',on_click=update_text)
+#st.button('✍🏻 진료기록 자동 완성 ',on_click=update_text)
 st.button('✅ impression list 및 진료 내용 검토',on_click=advise)
 st.button('🔄 새로운 환자',on_click=refresh,key='refreshbutton')
    
@@ -272,6 +273,6 @@ st.button('🔄 새로운 환자',on_click=refresh,key='refreshbutton')
 
 
     
-st.button("음성녹음 Demo",on_click=recorddemo)
+#st.button("음성녹음 Demo",on_click=recorddemo)
     #st.button("자동작성완료 Demo",on_click=completedemo)
     #st.session_state
