@@ -248,7 +248,7 @@ if openai_api_key.startswith('sk-') and st.session_state.recordings and len(st.s
             with st.spinner('음성 녹음을 바탕으로 진료 기록을 완성하고 있습니다...'):
                 st.session_state.LLM_medrecord = medical_record(transcript=st.session_state.transcript)
         else :    
-            chain = medical_record_voicecomplete()
+            chain = medical_record_voicecomplete(openai_api_key)
             with st.spinner('음성 녹음을 바탕으로 진료 기록을 완성하고 있습니다...'):
                 st.session_state.LLM_medrecord = chain.invoke({"transcript" : st.session_state.transcript, "incomplete_medrec" : st.session_state.temp_medical_record})
         medical_record_area.empty()
