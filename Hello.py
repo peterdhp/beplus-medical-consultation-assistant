@@ -263,7 +263,7 @@ if openai_api_key.startswith('sk-') and st.session_state.recordings and len(st.s
         medical_record_area.text_area('진료 기록', value=st.session_state.LLM_medrecord , height=600)
         
 #st.write(st.session_state)
-#st.button('✍🏻 진료기록 자동 완성 ',on_click=update_text)
+st.button('✍🏻 진료기록 자동 완성 ',on_click=update_text)
 st.button('✅ impression list 및 진료 내용 검토',on_click=advise)
 st.button('🔄 새로운 환자',on_click=refresh,key='refreshbutton')
    
@@ -272,6 +272,6 @@ st.button('🔄 새로운 환자',on_click=refresh,key='refreshbutton')
 
 
     
-#st.button("음성녹음 Demo",on_click=recorddemo)
+st.button("음성녹음 Demo",on_click=recorddemo)
     #st.button("자동작성완료 Demo",on_click=completedemo)
     #st.session_state
