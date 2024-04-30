@@ -100,7 +100,7 @@ def medical_record_voicecomplete(openai_api_key):
     prompt_template = """Given a transcript of a patient consultation and a incomplete medical record, complete and edit the medical record. 
 Complete or edit the medical record based ONLY on the information given. If you don't have enough information to complete the medical record, just leave it blank.
 For the physical examination KEEP THE FORMAT and only change what is necessary.
-DON'T give the impression list. After the medical record, give the list of things that the doctor explained to the patient during the consulaltation.
+DON'T give the impression list. After the medical record, give the list of things that the doctor explained to the patient during the consultation. the title should be [환자 설명 내용]
 Use Korean.
 
 [transcript]
