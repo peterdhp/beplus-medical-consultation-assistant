@@ -37,10 +37,8 @@ with st.sidebar:
     st.subheader("2.진료내용 녹음하기")
     st.markdown("`🎙️`을 눌러준 뒤 음성 인식이 잘되는지 확인하고 진료를 진행한다.")
     st.subheader("3.진료 마치기")
-    st.markdown("진료가 끝나면 `💾`을 누르고 음성파일이 처리되기를 기다린다.")
-    st.subheader("4.진료기록 자동 완성하기")
-    st.markdown("`✍🏻 진료기록 자동 완성`을 눌러 진료기록이 완성되기를 기다린다.")
-    st.subheader("5.진료기록 검토하기")
+    st.markdown("진료가 끝나면 `💾`을 누르고 음성파일을 바탕으로 진료기록이 완성되기를 기다린다.")
+    st.subheader("4.진료기록 검토하기")
     st.markdown("`✅ impression list 및 진료 내용 검토`을 눌러 진료기록이 검토되기를 기다린다.")
     st.subheader("5.새로고침")
     st.markdown("`🔄 새로운 환자`을 눌러 이전 진료기록을 지운다.")
@@ -220,8 +218,8 @@ class NamedBytesIO(io.BytesIO):
         self.name = name
 
 st.selectbox("진료기록 양식", options=['없음', '기본', '어깨통증'],index=1,on_change=call_format, key='format_type')
-
-st.text_area('진료 기록', value="[현병력]\n\n[ROS]", height=600, key='temp_medical_record')
+medical_record_area = st.empty()
+medical_record_area.text_area('진료 기록', value="[현병력]\n\n[ROS]", height=600, key='temp_medical_record')
 
 #timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 
@@ -246,9 +244,19 @@ if openai_api_key.startswith('sk-') and st.session_state.recordings and len(st.s
             asr_result = client.audio.transcriptions.create(model="whisper-1", language= "ko",prompt="이것은 의사와 환자의 진료 중 나눈 대화를 녹음한 것입니다.",file= NamedBytesIO(st.session_state.audio.export().read(), name="audio.wav"))
         st.session_state.transcript += '\n'+ asr_result.text 
         st.session_state.transcript_status = True
+        if st.session_state.format_type == '없음' and st.session_state.temp_medical_record == "":
+            with st.spinner('음성 녹음을 바탕으로 진료 기록을 완성하고 있습니다...'):
+                st.session_state.LLM_medrecord = medical_record(transcript=st.session_state.transcript)
+        else :    
+            chain = medical_record_voicecomplete()
+            with st.spinner('음성 녹음을 바탕으로 진료 기록을 완성하고 있습니다...'):
+                st.session_state.LLM_medrecord = chain.invoke({"transcript" : st.session_state.transcript, "incomplete_medrec" : st.session_state.temp_medical_record})
+        medical_record_area.empty()
+        medical_record_area.text_area('진료 기록', value=st.session_state.LLM_medrecord , height=600, key='temp_medical_record_2')
+        
 
 #st.text_area("진료 음성기록", key='transcript')
-st.button('✍🏻 진료기록 자동 완성 ',on_click=update_text)
+#st.button('✍🏻 진료기록 자동 완성 ',on_click=update_text)
 st.button('✅ impression list 및 진료 내용 검토',on_click=advise)
 st.button('🔄 새로운 환자',on_click=refresh,key='refreshbutton')
    
