@@ -50,7 +50,8 @@ def refresh():
     st.session_state.temp_medical_record ="[현병력]\n\n[ROS]"
     st.session_state.recordings = None
     st.session_state.transcript_status = False
-    player_field.empty()
+    if player_field:
+        player_field.empty()
 
 def medical_record(transcript,openai_api_key):
     prompt_template = """Given the transcript, write a semi-filled medical report of the patient. 
@@ -176,9 +177,12 @@ def call_format():
     st.session_state.temp_medical_record = format_retriever(st.session_state.format_type)
 
 def advise(): 
+    #if 'temp_medical_record_2' not in st.session_state:
+    #    st.session_state.temp_medical_record_2 = st.session_state.temp_medical_record
     with st.spinner('진료 기록을 검토 및 추정진단을 뽑고 있습니다...'):
-        output = medical_advisor(st.session_state.temp_medical_record_2,st.session_state.transcript,openai_api_key=openai_api_key)
-    st.session_state.temp_medical_record_2 += '\n\n'+ output
+        output = medical_advisor(st.session_state.temp_medical_record,st.session_state.transcript,openai_api_key=openai_api_key)
+    #print(output)
+    st.session_state.temp_medical_record += '\n\n'+ output
     st.success("진료 내용 검토 성공적으로 완료 되었습니다.")
 
 def medical_advisor(medical_record, transcript,openai_api_key):
@@ -234,16 +238,20 @@ if not openai_api_key.startswith('sk-'):
 if openai_api_key.startswith('sk-'):
     client = OpenAI(api_key=openai_api_key)
     st.session_state.audio=audiorecorder(start_prompt="", stop_prompt="", pause_prompt="", key='recordings')
+    
     if len(st.session_state.audio)>thirty_minutes:
         st.warning('음성 녹음은 30분을 초과할 수 없습니다. 첫 30분에 대한 진료내용만 사용합니다.', icon='⚠')
         st.session_state.audio = st.session_state.audio[:thirty_minutes]
 if openai_api_key.startswith('sk-') and st.session_state.recordings and len(st.session_state.audio)>100:
+    st.write(len(st.session_state.audio))
     player_field = st.audio(st.session_state.audio.export().read())  
     if not st.session_state.transcript_status :
         with st.spinner('음성 녹음을 받아적고 있습니다...'):
-            asr_result = client.audio.transcriptions.create(model="whisper-1", language= "ko",prompt="이것은 의사와 환자의 진료 중 나눈 대화를 녹음한 것입니다.",file= NamedBytesIO(st.session_state.audio.export().read(), name="audio.wav"))
+            asr_result = client.audio.transcriptions.create(model="whisper-1", language= "ko",file= NamedBytesIO(st.session_state.audio.export().read(), name="audio.wav"))
         st.session_state.transcript += '\n'+ asr_result.text 
         st.session_state.transcript_status = True
+        
+        st.text_area("진료 음성기록", value =st.session_state.transcript, key='transcript')
         if st.session_state.format_type == '없음' and st.session_state.temp_medical_record == "":
             with st.spinner('음성 녹음을 바탕으로 진료 기록을 완성하고 있습니다...'):
                 st.session_state.LLM_medrecord = medical_record(transcript=st.session_state.transcript,openai_api_key=openai_api_key)
@@ -252,10 +260,9 @@ if openai_api_key.startswith('sk-') and st.session_state.recordings and len(st.s
             with st.spinner('음성 녹음을 바탕으로 진료 기록을 완성하고 있습니다...'):
                 st.session_state.LLM_medrecord = chain.invoke({"transcript" : st.session_state.transcript, "incomplete_medrec" : st.session_state.temp_medical_record})
         medical_record_area.empty()
-        medical_record_area.text_area('진료 기록', value=st.session_state.LLM_medrecord , height=600, key='temp_medical_record_2')
+        medical_record_area.text_area('진료 기록', value=st.session_state.LLM_medrecord , height=600)
         
-
-st.text_area("진료 음성기록", value =st.session_state.transcript, key='transcript')
+#st.write(st.session_state)
 #st.button('✍🏻 진료기록 자동 완성 ',on_click=update_text)
 st.button('✅ impression list 및 진료 내용 검토',on_click=advise)
 st.button('🔄 새로운 환자',on_click=refresh,key='refreshbutton')
@@ -265,6 +272,6 @@ st.button('🔄 새로운 환자',on_click=refresh,key='refreshbutton')
 
 
     
-    #st.button("음성녹음 Demo",on_click=recorddemo)
+#st.button("음성녹음 Demo",on_click=recorddemo)
     #st.button("자동작성완료 Demo",on_click=completedemo)
     #st.session_state
