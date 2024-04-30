@@ -229,15 +229,16 @@ st.text_area('진료 기록', value="[현병력]\n\n[ROS]", height=600, key='tem
 #audio.export(byte_io, format='mp3')
 #byte_io.seek(0)
 thirty_minutes = 30 * 60 * 1000
-if len(st.session_state.audio)>thirty_minutes:
-    st.warning('음성 녹음은 30분을 초과할 수 없습니다. 첫 30분에 대한 진료내용만 사용합니다.', icon='⚠')
-    st.session_state.audio = st.session_state.audio[:thirty_minutes]
+
 
 if not openai_api_key.startswith('sk-'):
     st.warning('Please enter your OpenAI API key!', icon='⚠')
 if openai_api_key.startswith('sk-'):
     client = OpenAI(api_key=openai_api_key)
     st.session_state.audio=audiorecorder(start_prompt="", stop_prompt="", pause_prompt="", key='recordings')
+    if len(st.session_state.audio)>thirty_minutes:
+        st.warning('음성 녹음은 30분을 초과할 수 없습니다. 첫 30분에 대한 진료내용만 사용합니다.', icon='⚠')
+        st.session_state.audio = st.session_state.audio[:thirty_minutes]
 if openai_api_key.startswith('sk-') and st.session_state.recordings and len(st.session_state.audio)>100:
     player_field = st.audio(st.session_state.audio.export().read())  
     if not st.session_state.transcript_status :
