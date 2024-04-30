@@ -12,6 +12,16 @@ from openai import OpenAI
 if 'disabled' not in st.session_state:
     st.session_state.disabled = True
 
+if 'transcript_status' not in st.session_state:
+    st.session_state.transcript_status=False
+
+if 'transcript' not in st.session_state:
+    st.session_state.transcript =''
+
+if "total_cost" not in st.session_state:
+    st.session_state.totalcost = 0
+
+
 #st.session_state.temp_med_rec="[증상]\n[기타 특이사항]\n[진단]\n[치료, 처방 및 계획]"
 with st.sidebar:
     st.image('logo.png', caption=None, width=None, use_column_width=None, clamp=False, channels="RGB", output_format="auto")
@@ -25,59 +35,29 @@ with st.sidebar:
     st.subheader("1.진료 준비하기")
     st.markdown("`진료기록 양식`에서 원하는 양식을 선택하거나 진료기록 텍스트 상자에 원하는 양식을 붙여넣기한다.")
     st.subheader("2.진료내용 녹음하기")
-    st.markdown("`진료 녹음하기 🔴`을 눌러주고 진료를 진행한다. (진료가 시작되기 최소 3초전에는 녹음을 시작하는 것을 추천드립니다.)")
-    st.subheader("3.진료 음성기록 변환하기")
-    st.markdown("진료가 끝나면 `진료 녹음 끝내기 🟥`을 누르고 `진료 음성기록`이 완성되기를 기다린다. (잘못 기록한 의학 용어 등이 있을 경우 바로 수정 가능)")
+    st.markdown("`🎙️`을 눌러준 뒤 음성 인식이 잘되는지 확인하고 진료를 진행한다.")
+    st.subheader("3.진료 마치기")
+    st.markdown("진료가 끝나면 `💾`을 누르고 음성파일이 처리되기를 기다린다.")
     st.subheader("4.진료기록 자동 완성하기")
-    st.markdown("`✍🏻 진료기록 자동 완성 및 ✅ 진료 내용 검토`을 눌러 진료기록이 완성되고 검토되기를 기다린다.")
+    st.markdown("`✍🏻 진료기록 자동 완성`을 눌러 진료기록이 완성되기를 기다린다.")
+    st.subheader("5.진료기록 검토하기")
+    st.markdown("`✅ impression list 및 진료 내용 검토`을 눌러 진료기록이 검토되기를 기다린다.")
     st.subheader("5.새로고침")
-    st.markdown("`새로운 환자`을 눌러 이전 진료기록을 지운다.")
-
-if "total_cost" not in st.session_state:
-    st.session_state.totalcost = 0
-
-transcript = """[환자] : 안녕하세요
-[의사] : 네 안녕하세요 환자분, 어깨가 아프셔서 방문하셨군요. 운동범위를 확인해봐야될 것 같아요. 괜찮으시겠어요?
-[환자] : 네, 그럼요
-[의사] : 왼팔을 최대한 한번 들어보시겠어요?
-[환자] : 네
-[의사] : 왼팔은 170도 정도 되시네요. 제가 좀 더 올려볼게요.
-[환자] : 아아 아파요
-[의사] : 왼 어깨도 좋진 않으시네요. 평소에 안 불편하셨어요?
-[환자] : 병원 올 정도는 아니어서요.
-[의사] : 자 이번엔 오른팔 올려볼게요.
-[환자] : 아아 여기가 최대예요.
-[의사] : 120정도 밖에 안되시네요. 고생하셨겠어요.
-[환자] : 네 아무것도 못하고 있죠 뭐
-[의사] : 제가 조금 더 올려볼게요.
-[환자] : 아아아아아아 아파요.
-[의사] : 네 다 되셨어요. 오른쪽 어깨는 회전근개 파열이 의심되시는 상황이시고 왼쪽 어깨는 오십견이 오신거 같네요.
-[환자] : 선생님 어떻게 빨리 낫거나 할 수 있는 방법이 없나요? 파열 됐으면 수술 같은 것을 받아야하나요?
-[의사] : 수술은 파열이 어느정도 되었는지 살펴보고 말씀드릴 수 있어요. 검사를 진행해봐야될 것 같습니다. 예약을 잡아드리겠습니다.
-[환자] : 무슨 검사인가요?
-[의사] : MRI 검사라고 통속에 들어가서 사진을 찍는겁니다. 왼쪽도 찍는김에 같이 찍을게요. 그리고 그전에 통증 조절을 위해 진통제 처방 드리겠습니다.
-[환자] : 아이고 감사합니다. 무통주사 이런거는 없을까요? 너무 힘듭니다.
-[의사] : 놔드릴 수는 있는 비용이 좀 발생하세요.
-[환자] : 실비 보험이 들어있어서 괜찮습니다. 놔주세요.
-[의사] : 네 그럼 무통주사도 같이 놔드릴게요. 고혈압이나 당뇨병 같은 기저질환은 없으세요?
-[환자] : 네 다른건 다 괜찮고 건강합니다.
-[의사] : 네 알겠습니다. 밖에서 기다리시면 처방전이랑 검사 예약 잡아드릴게요.
-[환자] : 혹시 보험사에 제출할 세부진료내역서도 
-[의사] : 네 해드릴게요. 기다리세요
-"""
-transcript = """안녕하세요. 네 안녕하세요 환자분, 어깨가 아프셔서 방문하셨군요. 운동범위를 확인해봐야될 것 같아요. 괜찮으시겠어요? 네, 그럼요. 왼팔을 최대한 한번 들어보시겠어요? 네 왼팔은 170도 정도 되시네요. 제가 좀 더 올려볼게요. 아아 아파요. 왼 어깨도 좋진 않으시네요. 평소에 안 불편하셨어요? 병원 올 정도는 아니어서요. 자 이번엔 오른팔 올려볼게요. 아아 여기가 최대예요. 120정도 밖에 안되시네요. 고생하셨겠어요. 네 아무것도 못하고 있죠 뭐. 제가 조금 더 올려볼게요. 아아아아아아 아파요. 네 다 되셨어요. 오른쪽 어깨는 회전근개 파열이 의심되시는 상황이시고 왼쪽 어깨는 오십견이 오신거 같네요. 선생님 어떻게 빨리 낫거나 할 수 있는 방법이 없나요? 파열 됐으면 수술 같은 것을 받아야하나요? 수술은 파열이 어느정도 되었는지 살펴보고 말씀드릴 수 있어요. 검사를 진행해봐야될 것 같습니다. 예약을 잡아드리겠습니다. 무슨 검사인가요? MRI 검사라고 통속에 들어가서 사진을 찍는겁니다. 왼쪽도 찍는김에 같이 찍을게요. 그리고 그전에 통증 조절을 위해 진통제 처방 드리겠습니다. 아이고 감사합니다. 무통주사 이런거는 없을까요? 너무 힘듭니다. 놔드릴 수는 있는 비용이 좀 발생하세요. 실비 보험이 들어있어서 괜찮습니다. 놔주세요. 네 그럼 무통주사도 같이 놔드릴게요. 고혈압이나 당뇨병 같은 기저질환은 없으세요? 네 다른건 다 괜찮고 건강합니다. 네 알겠습니다. 밖에서 기다리시면 처방전이랑 검사 예약 잡아드릴게요. 혹시 보험사에 제출할 세부진료내역서도. 네 해드릴게요. 기다리세요"""
+    st.markdown("`🔄 새로운 환자`을 눌러 이전 진료기록을 지운다.")
+    
 def refresh():
     st.session_state.totalcost = 0
     st.session_state.format_type = '기본'
     st.session_state.transcript =''
-    st.session_state.temp_medical_record ="[현병력]\n\n[ROS]\n\n[신체검진]\n\n[impression]"
-    audio = None
+    st.session_state.temp_medical_record ="[현병력]\n\n[ROS]"
+    st.session_state.recordings = None
+    st.session_state.transcript_status = False
+    player_field.empty()
 
 def medical_record(transcript,openai_api_key):
-    """문진 내용을 기반으로 질문을 함"""
-    
     prompt_template = """Given the transcript, write a semi-filled medical report of the patient. Only fill in the form based on the transcript. 
-                
+After the medical record, give the list of things that the doctor explained to the patient during the consulaltation.
+Use Korean.
 [transcript]
 {transcript}
 
@@ -96,13 +76,6 @@ The output(except the diagnosis) should be in Korean. Here is an example :
 V/S : 130/90, 88, 36.5도
 약물력 : 특이사항 없음
 가족력 : 모름
-    
-[진단] #진단명은 영어로해줘. 예상 되는 진단 5개를 알려주고 왜 그렇게 생각했는지와 해야할 검사들을 알려줘. 진단을 할 때 특별히 유의할 점도 정리해줘
-R/O peptic ulcer(복부 통증이 있고, 어지러움을 느낌, 확인을 위해 위내시경을 시행)
-DDx1. reflux esophagitis(식사를 하고 나서 악화됨, 위내시경 시행)
-DDx2. gastric cancer (3개월전부터 호소, 위내시경 시행)
-DDx3. functional dyspepsia (3개월전부터 호소, 경과관찰)
-DDx4. trauma (복부 통증, xray로 골절 확인)
 
 주의할 점 : 67세 남성으로 위암을 배제할 수 없으므로 건강검진 시행여부 확인
     
@@ -111,8 +84,7 @@ CBC 시행
 위내시경 시행
 
 -----
-                
-                """
+"""
 
     prompt = PromptTemplate.from_template(prompt_template)
     llm = ChatOpenAI(model_name="gpt-4-turbo", temperature = 0,api_key=openai_api_key)
@@ -123,14 +95,11 @@ CBC 시행
     output = chain.invoke({"transcript" : transcript})
     return output
 
-def medical_record_voicecomplete(openai_api_key):
-    """문진 내용을 기반으로 질문을 함"""
-    
-    
+def medical_record_voicecomplete(openai_api_key): 
     
     prompt_template = """Given a transcript of a patient consultation and a incomplete medical record, complete and edit the medical record. 
-Complete or edit the medical record based ONLY on the information given. For the physical examination KEEP THE FORMAT and only change what is necessary. 
-After the medical record, give the list of things that the doctor explained to the patient during the consulaltation.
+Complete or edit the medical record based ONLY on the information given. For the physical examination KEEP THE FORMAT and only change what is necessary.
+DON'T give the impression list. After the medical record, give the list of things that the doctor explained to the patient during the consulaltation.
 Use Korean.
 
 [transcript]
@@ -177,13 +146,16 @@ def update_text_advise():
         output = medical_advisor(st.session_state.temp_medical_record,st.session_state.transcript,openai_api_key=openai_api_key)
     st.session_state.temp_medical_record += '\n\n'+ output
     st.success("진료 내용 검토 성공적으로 완료 되었습니다.")
+
+def recorddemo():
+    st.session_state.transcript = "오늘 어디 아파서 오셨어요? 선생님 제가 최근 며칠부터 너무 죽을 것 같아서요. 어제는 오늘부터 막 토도 하고 지금 기운도 너무 없고 음식도 못 먹겠고 지금 계속 토하고 배 아프고 너무 힘들어요. 그래요? 토하기 시작한 건 언제였어요? 토한 건 어제 오후부터 속이 안 좋더니 오늘부터는 계속 토하고 그래요. 토를 몇 번 하셨어요? 글쎄요. 먹은 것도 없이 계속 나왔어요. 토하면 먹은 게 아니라 그냥 우유 같은 거만 나오네요. 마지막으로 식사하신 건 언젠데요? 식사는 조금씩 했어요. 조금씩. 죽 같은 거 그냥. 마지막으로 언제 식사하셨어요? 아침에도 좀 줘 먹어야겠다 싶어서 너무 지금 기운도 하나도 없고 지금 너무 힘들어요. 설사는 하셨고요? 설사는 그냥 변이 좀 없다 정도만 했었고 마지막으로 본 건 언젠데요? 그건 어제인가 그젠가 배가 아프진 않으세요? 배가 아파요. 어디가 아파요? 배꼽 주변 다 전체적으로 아파요. 전체적으로 다? 배 아픈 것도 그럼 어제부터 그러신 거예요? 배는 요 근래부터 조금씩 조금씩 아프다니 어제 그제부터 좀 더 아파요. 근래? 근래면 정확히 어느 정도 됐을까요? 글쎄요. 제가 요새 좀 컨디션이 안 좋다 싶더니 갑자기 이게 심해지네요. 요새가 어느 정도 되셨어요? 글쎄요. 한 이번 주? 이번 주? 그럼 일주일 정도? 이번 주 한 글쎄요. 한 3-4일 됐을까? 3-4일? 그냥 제가 좀 몸살 기운 나고 좀 기침하고 좀 감기 기운이 있더니 컨디션이 확 너무 안 좋아지네요. 감기 기운이 있다가 안 좋아지셨어요? 네. 확 안 좋아지네요. 갑자기. 근데 변은 그냥 계속 묽게만 하고 네. 변은 그냥 섞여나오는 건 아니고요. 열은? 열은 그렇게 안 납니다. 열은 없고요. 원래 앓고 계시는 병 있으세요? 뭐 딱히 앓고 있는 병은 없어요. 그냥 가끔 정기적으로 먹는 약 같은 거? 제가 진통제는 좀 자주 먹어요. 허리가 너무 아파요. 허리가 아파요? 허리는 언제부터 그랬는데? 허리는 좀 술창이 됐죠. 얼마나? 몇 년 된 것 같아요. 몇 년? 그럼 진통제는 뭐 계속 먹어야 돼요? 아니면은 계속 먹어야 돼요. 진짜 계속 먹어야 돼요. 너무 아파서 그거 어디서 처방 받으신 거예요? 처음 봐서 먹죠. 진통제는 이름은 모르시죠? 이름은 잘 모르시고. 이름은 잘 모르시고. 처방은 어디서 받으세요? 동네 정형외과. 동네 정형외과. 아침에 너무 힘들어요. 선생님. 일단 네. 아침에 너무 힘들어요. 지금. 너무 기분도 없고. X-ray랑 혈액 검사를 좀 잠깐 하고 그리고 제가 좀 보도록 하겠습니다."
  
 def format_retriever(format_type):
     
     format_lib ={}
     
     format_lib["없음"] = ""
-    format_lib["기본"] = "[현병력]\n\n[ROS]\n\n[신체검진]\n\n[impression]"
+    format_lib["기본"] = "[현병력]\n\n[ROS]"
     format_lib["어깨통증"] = """[현병력]
     
 [ROS]
@@ -194,8 +166,7 @@ Lt. abduction/adduction = 150/30
 Rt. abduction/adduction = 150/30
 Lt. extension/flexion = 50/150
 Rt. extension/flexion = 50/150
-
-[impression]"""
+"""
     
     output = format_lib.get(format_type)
     
@@ -205,17 +176,24 @@ def call_format():
     st.session_state.temp_medical_record = format_retriever(st.session_state.format_type)
 
 def advise(): 
-    output = medical_advisor(st.session_state.temp_medical_record,st.session_state.transcript,openai_api_key=openai_api_key)
+    with st.spinner('진료 기록을 검토 및 추정진단을 뽑고 있습니다...'):
+        output = medical_advisor(st.session_state.temp_medical_record,st.session_state.transcript,openai_api_key=openai_api_key)
     st.session_state.temp_medical_record += '\n\n'+ output
     st.success("진료 내용 검토 성공적으로 완료 되었습니다.")
 
 def medical_advisor(medical_record, transcript,openai_api_key):
     prompt_template = """Let's say you are a medical school professor.
-Given a transcript of a patient consultation and a complete medical record written, give medical feedback to the doctor in Korean.
-ONLY give feedback that could be critical to the patient, you don't have to say anything if nothing is critical.
+Given a transcript of a patient consultation and a complete medical record written, 
+Give a list of impression in the format below :
+[진단] #진단명은 영어로해줘. 예상 되는 진단 5개를 알려주고 왜 그렇게 생각했는지와 해야할 검사들을 알려줘. 진단을 할 때 특별히 유의할 점도 정리해줘
+R/O peptic ulcer(복부 통증이 있고, 어지러움을 느낌, 확인을 위해 위내시경을 시행)
+DDx1. reflux esophagitis(식사를 하고 나서 악화됨, 위내시경 시행)
+DDx2. gastric cancer (3개월전부터 호소, 위내시경 시행)
+DDx3. functional dyspepsia (3개월전부터 호소, 경과관찰)
+DDx4. trauma (복부 통증, xray로 골절 확인)
+
+Then give medical feedback to the doctor in Korean. ONLY give feedback that could be critical to the patient, you don't have to say anything if nothing is critical.
 Be as brief and clear as possible, no longer than 50 Korean characters.
-
-
 
 [transcript]
 {transcript}
@@ -241,27 +219,34 @@ class NamedBytesIO(io.BytesIO):
 
 st.selectbox("진료기록 양식", options=['없음', '기본', '어깨통증'],index=1,on_change=call_format, key='format_type')
 
-st.text_area('진료 기록', value="[현병력]\n\n[ROS]\n\n[신체검진]\n\n[Impression]", height=600, key='temp_medical_record')
+st.text_area('진료 기록', value="[현병력]\n\n[ROS]", height=600, key='temp_medical_record')
 
 #timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 
 #byte_io = io.BytesIO()
 #audio.export(byte_io, format='mp3')
 #byte_io.seek(0)
-
+thirty_minutes = 30 * 60 * 1000
+if len(st.session_state.audio)>thirty_minutes:
+    st.warning('음성 녹음은 30분을 초과할 수 없습니다. 첫 30분에 대한 진료내용만 사용합니다.', icon='⚠')
+    st.session_state.audio = st.session_state.audio[:thirty_minutes]
 
 if not openai_api_key.startswith('sk-'):
     st.warning('Please enter your OpenAI API key!', icon='⚠')
 if openai_api_key.startswith('sk-'):
     client = OpenAI(api_key=openai_api_key)
-    audio = audiorecorder(start_prompt="진료 녹음하기 🔴", stop_prompt="진료 녹음 끝내기 🟥", pause_prompt="", key=None)
+    st.session_state.audio=audiorecorder(start_prompt="", stop_prompt="", pause_prompt="", key='recordings')
+if openai_api_key.startswith('sk-') and st.session_state.recordings and len(st.session_state.audio)>100:
+    player_field = st.audio(st.session_state.audio.export().read())  
+    if not st.session_state.transcript_status :
+        with st.spinner('음성 녹음을 받아적고 있습니다...'):
+            asr_result = client.audio.transcriptions.create(model="whisper-1", language= "ko",prompt="이것은 의사와 환자의 진료 중 나눈 대화를 녹음한 것입니다.",file= NamedBytesIO(st.session_state.audio.export().read(), name="audio.wav"))
+        st.session_state.transcript += '\n'+ asr_result.text 
+        st.session_state.transcript_status = True
 
-if openai_api_key.startswith('sk-') and len(audio)>0.1:
-    with st.spinner('음성 녹음을 받아적고 있습니다...'):
-        asr_result = client.audio.transcriptions.create(model="whisper-1", language= "ko",file= NamedBytesIO(audio.export().read(), name="audio.wav"))
-    st.session_state.transcript += '\n'+ asr_result.text       
-st.text_area("진료 음성기록", key='transcript')
-st.button('✍🏻 진료기록 자동 완성 및 ✅ 진료 내용 검토',on_click=update_text_advise,disabled= st.session_state.disabled)
+#st.text_area("진료 음성기록", key='transcript')
+st.button('✍🏻 진료기록 자동 완성 ',on_click=update_text)
+st.button('✅ impression list 및 진료 내용 검토',on_click=advise)
 st.button('🔄 새로운 환자',on_click=refresh,key='refreshbutton')
    
 #encoded_image = base64.b64encode(open("logo.png", "rb").read()).decode()
