@@ -183,7 +183,7 @@ def advise():
     with st.spinner('진료 기록을 검토 및 추정진단을 뽑고 있습니다...'):
         output = medical_advisor(st.session_state.temp_medical_record,st.session_state.transcript,openai_api_key=openai_api_key)
     #print(output)
-    st.session_state.temp_medical_record += '\n\n'+ output
+    st.session_state.temp_medical_record = st.session_state.LLM_medrecord + '\n\n'+ output
     st.success("진료 내용 검토 성공적으로 완료 되었습니다.")
 
 def medical_advisor(medical_record, transcript,openai_api_key):
