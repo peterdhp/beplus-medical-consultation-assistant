@@ -35,6 +35,8 @@ with st.sidebar:
         openai_api_key = st.text_input('OpenAI API Key', type='password')
         if openai_api_key:
             st.session_state.disabled = False
+    else:
+        openai_api_key = st.secrets["OPENAI_API_KEY"]
     st.subheader("1.진료 준비하기")
     st.markdown("`진료기록 양식`에서 원하는 양식을 선택하거나 진료기록 텍스트 상자에 원하는 양식을 붙여넣기한다.")
     st.subheader("2.진료내용 녹음하기")
