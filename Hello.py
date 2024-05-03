@@ -22,14 +22,14 @@ if "total_cost" not in st.session_state:
     st.session_state.totalcost = 0
 
 player_field=None
-bumin =True
+bumin =False
 
 #st.session_state.temp_med_rec="[증상]\n[기타 특이사항]\n[진단]\n[치료, 처방 및 계획]"
 with st.sidebar:
     st.image('logo.png', caption=None, width=None, use_column_width=None, clamp=False, channels="RGB", output_format="auto")
     st.title("진료 도우미 (BETA ver.)")
     st.header("사용설명서")
-    if bumin :
+    if not bumin :
         st.subheader("0.openAI API key 입력하기")
         st.markdown("https://m.blog.naver.com/mynameistk/223062993136 를 참고하여 APIkey를 아래에 입력한다.")
         openai_api_key = st.text_input('OpenAI API Key', type='password')
@@ -240,10 +240,10 @@ if not st.session_state.transcript_status:
 thirty_minutes = 30 * 60 * 1000
 
 
-if bumin and not openai_api_key.startswith('sk-'):
+if not bumin and not openai_api_key.startswith('sk-'):
     st.warning('Please enter your OpenAI API key!', icon='⚠')
 
-if not bumin or openai_api_key.startswith('sk-'):
+if bumin or openai_api_key.startswith('sk-'):
     client = OpenAI(api_key=openai_api_key)
     st.session_state.audio=audiorecorder(start_prompt="", stop_prompt="", pause_prompt="", key='recordings')
     
