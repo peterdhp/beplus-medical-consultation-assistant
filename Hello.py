@@ -164,9 +164,8 @@ def advise():
     chain = medical_advisor(openai_api_key=openai_api_key)
     with st.spinner('진료 기록을 검토 및 추정진단을 뽑고 있습니다...'):
         stream = chain.stream({"transcript" : st.session_state.transcript, "medical_record" : st.session_state.temp_medical_record_2})
-        stream_area = st.empty()
-        output =stream_area.write_stream(stream)
-        stream_area.empty()
+        output =medical_record_area.write_stream(stream)
+        medical_record_area.empty()
         
     #print(output)
     st.session_state.temp_medical_record_2 += '\n\n'+ output
@@ -228,7 +227,6 @@ Be as brief and clear as possible, no longer than 50 Korean characters.
     output_parser = StrOutputParser()
 
     chain = prompt | llm | output_parser
-    output = chain
     
     return chain
 
@@ -268,16 +266,22 @@ if openai_api_key.startswith('sk-') and st.session_state.recordings and len(st.s
         with st.spinner('음성 녹음을 받아적고 있습니다...'):
             asr_result = client.audio.transcriptions.create(model="whisper-1", language= "ko",file= NamedBytesIO(st.session_state.audio.export().read(), name="audio.wav"))
         st.session_state.transcript += '\n'+ asr_result.text 
+       
         st.session_state.transcript_status = True
         
         #st.text_area("진료 음성기록", value =st.session_state.transcript, key='transcript')
         if st.session_state.format_type == '없음' and st.session_state.temp_medical_record == "":
+            chain = medical_record(openai_api_key)
             with st.spinner('음성 녹음을 바탕으로 진료 기록을 완성하고 있습니다...'):
-                st.session_state.LLM_medrecord = medical_record(transcript=st.session_state.transcript,openai_api_key=openai_api_key)
+                stream = chain.stream({"transcript" : st.session_state.transcript})
+                st.session_state.LLM_medrecord =medical_record_area.write_stream(stream)
+                medical_record_area.empty()
         else :    
             chain = medical_record_voicecomplete(openai_api_key)
             with st.spinner('음성 녹음을 바탕으로 진료 기록을 완성하고 있습니다...'):
-                st.session_state.LLM_medrecord = chain.invoke({"transcript" : st.session_state.transcript, "incomplete_medrec" : st.session_state.temp_medical_record})
+                stream = chain.stream({"transcript" : st.session_state.transcript, "incomplete_medrec" : st.session_state.temp_medical_record})
+                st.session_state.LLM_medrecord =medical_record_area.write_stream(stream)
+                medical_record_area.empty() 
 
 if st.session_state.transcript_status :
     medical_record_area.text_area('진료 기록', value=st.session_state.LLM_medrecord , height=600, key= 'temp_medical_record_2')
